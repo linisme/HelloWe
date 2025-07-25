@@ -1,0 +1,64 @@
+name: Auto Publish to WeChat
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'articles/**/*.md' ]
+  workflow_dispatch:  # 手动触发
+    inputs:
+      force_publish:
+        description: '强制发布所有文章'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  detect-and-publish:
+    runs-on: self-hosted
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 获取完整历史，用于检测变更
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install -r scripts/requirements.txt
+    
+    - name: Detect new or modified articles
+      id: detect
+      run: |
+        python scripts/detect_changes.py
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Publish to WeChat
+      if: steps.detect.outputs.has_changes == 'true'
+      run: |
+        python scripts/wechat_publisher.py
+      env:
+        WECHAT_APP_ID: ${{ secrets.WECHAT_APP_ID }}
+        WECHAT_APP_SECRET: ${{ secrets.WECHAT_APP_SECRET }}
+        AUTHOR_NAME: ${{ vars.AUTHOR_NAME }}
+        SOURCE_URL: ${{ vars.SOURCE_URL }}
+    
+    - name: Update published record
+      if: steps.detect.outputs.has_changes == 'true'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add config/published.json
+        git commit -m "Update published articles record [skip ci]" || exit 0
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Create summary
+      run: |
+        python scripts/create_summary.py >> $GITHUB_STEP_SUMMARY

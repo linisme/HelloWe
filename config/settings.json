@@ -1,0 +1,18 @@
+{
+  "wechat": {
+    "app_id": "你的微信公众号AppID",
+    "app_secret": "你的微信公众号AppSecret"
+  },
+  "author": {
+    "name": "作者名称",
+    "source_url": "原文链接域名"
+  },
+  "github_secrets": {
+    "WECHAT_APP_ID": "在GitHub仓库Settings中配置",
+    "WECHAT_APP_SECRET": "在GitHub仓库Settings中配置"
+  },
+  "github_variables": {
+    "AUTHOR_NAME": "在GitHub仓库Settings中配置",
+    "SOURCE_URL": "在GitHub仓库Settings中配置"
+  }
+}
