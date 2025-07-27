@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "自动发布微信公众号文章的工具"
 dependencies = [
     "markdown>=3.7",
+    "pillow>=10.4.0",
     "pygments>=2.19.2",
     "requests>=2.32.4",
 ]
