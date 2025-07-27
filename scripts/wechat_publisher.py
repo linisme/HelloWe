@@ -278,12 +278,12 @@ class WeChatPublisher:
             "only_fans_can_comment": 0
         }
         
-        # 只有当有缩略图时才添加 thumb_media_id
-        if thumb_media_id and thumb_media_id.strip():
-            print(f"✅ 添加缩略图到草稿: {thumb_media_id}")
-            article_data["thumb_media_id"] = thumb_media_id
-        else:
-            print(f"⚠️  跳过缩略图（无效或为空）: '{thumb_media_id}'")
+        # thumb_media_id 是必填字段，必须传递有效值
+        if not thumb_media_id or not thumb_media_id.strip():
+            raise Exception("缩略图 media_id 不能为空，这是微信草稿API的必填字段")
+        
+        print(f"✅ 添加缩略图到草稿: {thumb_media_id}")
+        article_data["thumb_media_id"] = thumb_media_id
         
         data = {"articles": [article_data]}
         print(f"🔍 发送到微信API的数据: {json.dumps(data, indent=2, ensure_ascii=False)}")
@@ -350,7 +350,17 @@ class WeChatPublisher:
         print(f"🔍 最终缩略图状态 - thumb_media_id: '{thumb_media_id}', 类型: {type(thumb_media_id)}, 布尔值: {bool(thumb_media_id)}")
         
         if not thumb_media_id:
-            print("⚠️  未找到缩略图或上传失败，将使用默认缩略图")
+            print("⚠️  未找到缩略图或上传失败，尝试使用默认缩略图")
+            default_thumb_path = Path(__file__).parent.parent / 'config' / 'default_thumb.jpg'
+            if default_thumb_path.exists():
+                try:
+                    thumb_media_id = self.upload_thumb_media(str(default_thumb_path))
+                    print(f"✅ 默认缩略图上传成功，media_id: {thumb_media_id}")
+                except Exception as e:
+                    print(f"❌ 默认缩略图上传失败: {e}")
+                    raise Exception(f"无法获取有效的缩略图 media_id，草稿创建需要缩略图: {e}")
+            else:
+                raise Exception(f"默认缩略图文件不存在: {default_thumb_path}")
         
         # 创建草稿
         media_id = self.create_draft(
