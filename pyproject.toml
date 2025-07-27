@@ -3,15 +3,15 @@ name = "hellowe"
 version = "0.1.0"
 description = "自动发布微信公众号文章的工具"
 dependencies = [
-    "requests>=2.31.0",
-    "markdown>=3.5.1",
-    "pygments>=2.16.1",
+    "markdown>=3.7",
+    "pygments>=2.19.2",
+    "requests>=2.32.4",
 ]
 requires-python = ">=3.8"
 
 [tool.uv]
 dev-dependencies = [
-    "pytest>=7.0.0",
-    "black>=22.0.0",
-    "isort>=5.0.0",
+    "black>=24.8.0",
+    "isort>=5.13.2",
+    "pytest>=8.3.5",
 ]
