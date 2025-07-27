@@ -258,18 +258,21 @@ class WeChatPublisher:
         access_token = self.get_access_token()
         url = f"https://api.weixin.qq.com/cgi-bin/draft/add?access_token={access_token}"
         
-        data = {
-            "articles": [{
-                "title": title,
-                "author": author,
-                "digest": digest,
-                "content": content,
-                "content_source_url": source_url,
-                "thumb_media_id": thumb_media_id,
-                "need_open_comment": 1,
-                "only_fans_can_comment": 0
-            }]
+        article_data = {
+            "title": title,
+            "author": author,
+            "digest": digest,
+            "content": content,
+            "content_source_url": source_url,
+            "need_open_comment": 1,
+            "only_fans_can_comment": 0
         }
+        
+        # 只有当有缩略图时才添加 thumb_media_id
+        if thumb_media_id:
+            article_data["thumb_media_id"] = thumb_media_id
+        
+        data = {"articles": [article_data]}
         
         response = requests.post(url, json=data)
         result = response.json()
@@ -314,8 +317,16 @@ class WeChatPublisher:
         for thumb_name in ['thumb.jpg', 'thumb.jpeg', 'thumb.png', 'cover.jpg', 'cover.png']:
             thumb_path = article_dir / thumb_name
             if thumb_path.exists():
-                thumb_media_id = self.upload_thumb_media(str(thumb_path))
-                break
+                try:
+                    thumb_media_id = self.upload_thumb_media(str(thumb_path))
+                    print(f"✅ 缩略图上传成功: {thumb_name}")
+                    break
+                except Exception as e:
+                    print(f"⚠️  缩略图上传失败 {thumb_name}: {e}")
+                    continue
+        
+        if not thumb_media_id:
+            print("⚠️  未找到缩略图或上传失败，将使用默认缩略图")
         
         # 创建草稿
         media_id = self.create_draft(
