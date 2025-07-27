@@ -53,17 +53,24 @@ class WeChatPublisher:
     
     def upload_thumb_media(self, image_path):
         """上传缩略图素材"""
+        print(f"🔍 开始上传缩略图: {image_path}")
         access_token = self.get_access_token()
         url = f"https://api.weixin.qq.com/cgi-bin/material/add_material?access_token={access_token}&type=thumb"
+        print(f"🔍 上传URL: {url}")
         
         with open(image_path, 'rb') as f:
             files = {'media': (os.path.basename(image_path), f, 'image/jpeg')}
+            print(f"🔍 文件信息: {os.path.basename(image_path)}, 大小: {os.path.getsize(image_path)} bytes")
             response = requests.post(url, files=files)
             result = response.json()
+            print(f"🔍 上传响应: {result}")
             
         if result.get('errcode') == 0:
-            return result['media_id']
+            media_id = result['media_id']
+            print(f"✅ 缩略图上传成功，media_id: {media_id}")
+            return media_id
         else:
+            print(f"❌ 缩略图上传失败: {result}")
             raise Exception(f"缩略图上传失败: {result}")
     
     def process_markdown_content(self, markdown_content, article_dir):
@@ -255,6 +262,9 @@ class WeChatPublisher:
     
     def create_draft(self, title, content, author, digest, thumb_media_id, source_url):
         """创建草稿"""
+        print(f"🔍 创建草稿 - 标题: {title}")
+        print(f"🔍 传入的thumb_media_id: '{thumb_media_id}', 类型: {type(thumb_media_id)}, 长度: {len(thumb_media_id) if thumb_media_id else 0}")
+        
         access_token = self.get_access_token()
         url = f"https://api.weixin.qq.com/cgi-bin/draft/add?access_token={access_token}"
         
@@ -269,17 +279,24 @@ class WeChatPublisher:
         }
         
         # 只有当有缩略图时才添加 thumb_media_id
-        if thumb_media_id:
+        if thumb_media_id and thumb_media_id.strip():
+            print(f"✅ 添加缩略图到草稿: {thumb_media_id}")
             article_data["thumb_media_id"] = thumb_media_id
+        else:
+            print(f"⚠️  跳过缩略图（无效或为空）: '{thumb_media_id}'")
         
         data = {"articles": [article_data]}
+        print(f"🔍 发送到微信API的数据: {json.dumps(data, indent=2, ensure_ascii=False)}")
         
         response = requests.post(url, json=data)
         result = response.json()
+        print(f"🔍 微信API响应: {result}")
         
         if result.get('errcode') == 0:
+            print(f"✅ 草稿创建成功，media_id: {result['media_id']}")
             return result['media_id']
         else:
+            print(f"❌ 草稿创建失败: {result}")
             raise Exception(f"创建草稿失败: {result}")
     
     def publish_draft(self, media_id):
@@ -314,16 +331,23 @@ class WeChatPublisher:
         
         # 查找缩略图
         thumb_media_id = ""
+        print(f"🔍 开始查找缩略图，目录: {article_dir}")
+        
         for thumb_name in ['thumb.jpg', 'thumb.jpeg', 'thumb.png', 'cover.jpg', 'cover.png']:
             thumb_path = article_dir / thumb_name
+            print(f"🔍 检查缩略图文件: {thumb_path}")
             if thumb_path.exists():
+                print(f"📁 找到缩略图文件: {thumb_name}")
                 try:
                     thumb_media_id = self.upload_thumb_media(str(thumb_path))
-                    print(f"✅ 缩略图上传成功: {thumb_name}")
+                    print(f"✅ 缩略图上传成功: {thumb_name}, media_id: {thumb_media_id}")
                     break
                 except Exception as e:
                     print(f"⚠️  缩略图上传失败 {thumb_name}: {e}")
+                    thumb_media_id = ""  # 确保失败时重置为空字符串
                     continue
+        
+        print(f"🔍 最终缩略图状态 - thumb_media_id: '{thumb_media_id}', 类型: {type(thumb_media_id)}, 布尔值: {bool(thumb_media_id)}")
         
         if not thumb_media_id:
             print("⚠️  未找到缩略图或上传失败，将使用默认缩略图")
