@@ -30,8 +30,8 @@ HelloWe/
 ├── scripts/                         # 发布脚本
 │   ├── detect_changes.py           # 变更检测脚本
 │   ├── wechat_publisher.py         # 微信发布核心脚本
-│   ├── create_summary.py           # 摘要生成脚本
-│   └── requirements.txt            # Python依赖
+│   └── create_summary.py           # 摘要生成脚本
+├── pyproject.toml                   # UV项目配置文件
 ├── config/
 │   ├── published.json              # 已发布文章记录
 │   └── settings.json               # 配置文件模板
@@ -40,14 +40,32 @@ HelloWe/
 
 ## 🚀 快速开始
 
-### 1. 克隆项目
+### 1. 环境准备
+
+确保已安装 [uv](https://docs.astral.sh/uv/getting-started/installation/)：
+
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+### 2. 克隆项目
 
 ```bash
 git clone https://github.com/yourusername/HelloWe.git
 cd HelloWe
 ```
 
-### 2. 配置微信公众号
+### 3. 安装依赖
+
+```bash
+uv sync
+```
+
+### 4. 配置微信公众号
 
 1. 登录微信公众平台，获取 `AppID` 和 `AppSecret`
 2. 在 GitHub 仓库的 Settings → Secrets and variables → Actions 中添加：
@@ -60,7 +78,7 @@ cd HelloWe
 - `AUTHOR_NAME`: 作者名称
 - `SOURCE_URL`: 原文链接域名
 
-### 3. 创建第一篇文章
+### 5. 创建第一篇文章
 
 ```bash
 # 创建文章目录
@@ -87,7 +105,7 @@ EOF
 cp your-image.jpg articles/2025/01-my-first-article/thumb.jpg
 ```
 
-### 4. 提交并自动发布
+### 6. 提交并自动发布
 
 ```bash
 git add .
@@ -96,6 +114,31 @@ git push origin main
 ```
 
 文章将自动发布到你的微信公众号！
+
+## 🛠️ 本地开发
+
+### 使用 uv 运行脚本
+
+```bash
+# 检测文章变更
+uv run python scripts/detect_changes.py
+
+# 发布文章到微信
+uv run python scripts/wechat_publisher.py
+
+# 生成发布摘要
+uv run python scripts/create_summary.py
+```
+
+### 添加新依赖
+
+```bash
+# 添加生产依赖
+uv add requests
+
+# 添加开发依赖
+uv add --dev pytest
+```
 
 ## 📖 使用说明
 
