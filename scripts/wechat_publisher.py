@@ -88,15 +88,25 @@ class WeChatPublisher:
                 if full_path.exists():
                     try:
                         wx_url = self.upload_image(str(full_path))
-                        return f'<img src="{wx_url}" alt="{img_alt}" style="width: 100%; height: auto;">'
+                        return f'<div class="img-container"><img src="{wx_url}" alt="{img_alt}"><div class="img-caption">{img_alt}</div></div>'
                     except Exception as e:
                         print(f"⚠️  图片上传失败 {img_path}: {e}")
                         return f'<p>[图片上传失败: {img_alt}]</p>'
             
-            return f'<img src="{img_path}" alt="{img_alt}" style="width: 100%; height: auto;">'
+            return f'<div class="img-container"><img src="{img_path}" alt="{img_alt}"><div class="img-caption">{img_alt}</div></div>'
+        
+        # 预处理：添加特殊标记
+        # 将 **文本** 转换为带高亮的strong标签
+        markdown_content = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', markdown_content)
+        
+        # 将重要提示转换为特殊样式
+        markdown_content = re.sub(r'(?:^|\n)> (.*?)(?=\n|$)', r'\n<blockquote>\1</blockquote>\n', markdown_content, flags=re.MULTILINE)
         
         # 替换图片
         markdown_content = re.sub(r'!\[(.*?)\]\((.*?)\)', replace_images, markdown_content)
+        
+        # 添加章节分隔符
+        markdown_content = re.sub(r'\n---\n', '<div class="section-divider"><span>◆ ◆ ◆</span></div>', markdown_content)
         
         # 转换为HTML
         html = markdown.markdown(
@@ -110,28 +120,397 @@ class WeChatPublisher:
             }
         )
         
+        # 后处理：优化HTML结构
+        # 包装内容
+        html = f'<div class="content">{html}</div>'
+        
+        # 为表格添加容器
+        html = re.sub(r'<table>', '<div class="table-container"><table>', html)
+        html = re.sub(r'</table>', '</table></div>', html)
+        
         return self.add_wechat_styles(html)
     
     def add_wechat_styles(self, html):
-        """添加微信公众号样式 - 简化版以符合20000字符限制"""
+        """添加微信公众号样式 - 现代化设计版本"""
         styles = """<style>
-body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",Arial;font-size:16px;line-height:1.6;color:#333;margin:0;padding:20px}
-h1{font-size:1.8em;font-weight:bold;color:#2c3e50;border-bottom:3px solid #3498db;padding-bottom:0.3em;margin:1.5em 0 1em 0}
-h2{font-size:1.5em;font-weight:bold;color:#2c3e50;border-left:4px solid #3498db;padding-left:0.5em;margin:1.3em 0 0.8em 0}
-h3{font-size:1.3em;font-weight:bold;color:#e74c3c;margin:1.2em 0 0.6em 0}
-p{margin:1em 0;text-align:justify;line-height:1.8}
-code{background-color:#f8f9fa;padding:2px 6px;border-radius:4px;color:#e74c3c;font-size:0.9em}
-pre{background-color:#f8f9fa;padding:1.2em;border-radius:8px;overflow-x:auto;border-left:4px solid #3498db;margin:1.5em 0}
-blockquote{border-left:4px solid #3498db;margin:1.5em 0;padding:0.5em 1.2em;background-color:#f8f9fa;font-style:italic;color:#666}
-ul,ol{margin:1em 0;padding-left:2em}
-li{margin:0.5em 0;line-height:1.6}
-table{border-collapse:collapse;width:100%;margin:1.5em 0;font-size:0.9em}
-th,td{border:1px solid #ddd;padding:10px 12px;text-align:left}
-th{background-color:#3498db;color:white;font-weight:bold}
-tr:nth-child(even){background-color:#f2f2f2}
-img{max-width:100%;height:auto;border-radius:8px;margin:1em 0}
-a{color:#3498db;text-decoration:none}
-hr{border:none;height:1px;background-color:#ddd;margin:2em 0}
+/* 基础样式 */
+body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.75;
+    color: #2c3e50;
+    margin: 0;
+    padding: 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
+}
+
+.content {
+    max-width: 100%;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.content::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+    border-radius: 16px 16px 0 0;
+}
+
+/* 标题样式 */
+h1 {
+    font-size: 2.2em;
+    font-weight: 800;
+    color: #2c3e50;
+    text-align: center;
+    margin: 2em 0 1.5em;
+    padding: 20px 0;
+    position: relative;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+h1::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 2px;
+    transform: translateX(-50%);
+}
+
+h2 {
+    font-size: 1.6em;
+    font-weight: 700;
+    color: #34495e;
+    margin: 2.5em 0 1.2em;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-left: 5px solid #667eea;
+    border-radius: 0 12px 12px 0;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+h2::before {
+    content: "✦";
+    color: #667eea;
+    font-size: 1.2em;
+    margin-right: 8px;
+}
+
+h3 {
+    font-size: 1.3em;
+    font-weight: 600;
+    color: #e74c3c;
+    margin: 2em 0 1em;
+    padding: 8px 16px;
+    border-left: 3px solid #e74c3c;
+    background: linear-gradient(90deg, #fef5f5 0%, transparent 100%);
+    border-radius: 0 8px 8px 0;
+}
+
+/* 段落和文本样式 */
+p {
+    margin: 1.5em 0;
+    text-align: justify;
+    line-height: 1.8;
+    font-size: 17px;
+    color: #34495e;
+    text-indent: 0;
+}
+
+strong {
+    color: #2c3e50;
+    font-weight: 700;
+    background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+    padding: 3px 8px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(132, 250, 176, 0.3);
+}
+
+em {
+    color: #e74c3c;
+    font-style: normal;
+    font-weight: 600;
+    background: linear-gradient(120deg, #ffeaa7 0%, #fab1a0 100%);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* 代码样式 */
+code {
+    background: #f8fafc;
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: #e91e63;
+    font-size: 0.9em;
+    border: 1px solid #e2e8f0;
+    font-family: "Fira Code", "JetBrains Mono", Consolas, monospace;
+}
+
+pre {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 24px;
+    border-radius: 12px;
+    overflow-x: auto;
+    margin: 2em 0;
+    position: relative;
+    color: #ffffff;
+    font-family: "Fira Code", "JetBrains Mono", Consolas, monospace;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+}
+
+pre::before {
+    content: "{ code }";
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+pre code {
+    background: transparent;
+    border: none;
+    color: inherit;
+    padding: 0;
+}
+
+/* 引用样式 */
+blockquote {
+    border-left: 5px solid #667eea;
+    margin: 2em 0;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 0 12px 12px 0;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+}
+
+blockquote::before {
+    content: "💫";
+    position: absolute;
+    top: 16px;
+    left: -16px;
+    background: #ffffff;
+    padding: 8px;
+    border-radius: 50%;
+    font-size: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 列表样式 */
+ul, ol {
+    margin: 1.5em 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+ul li {
+    position: relative;
+    margin: 1em 0;
+    padding-left: 2em;
+    line-height: 1.7;
+}
+
+ul li::before {
+    content: "▸";
+    color: #667eea;
+    font-weight: bold;
+    font-size: 1.2em;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+ol {
+    counter-reset: item;
+}
+
+ol li {
+    position: relative;
+    margin: 1em 0;
+    padding-left: 2.5em;
+    line-height: 1.7;
+    counter-increment: item;
+}
+
+ol li::before {
+    content: counter(item);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* 图片样式 */
+img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 16px;
+    margin: 2em auto;
+    display: block;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.img-container {
+    text-align: center;
+    margin: 2.5em 0;
+    padding: 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.img-caption {
+    text-align: center;
+    color: #64748b;
+    font-size: 15px;
+    margin-top: 12px;
+    font-style: italic;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    display: inline-block;
+}
+
+/* 表格样式 */
+.table-container {
+    overflow-x: auto;
+    margin: 2em 0;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0;
+    font-size: 0.95em;
+    background: #ffffff;
+}
+
+th, td {
+    border: 1px solid #e2e8f0;
+    padding: 16px 20px;
+    text-align: left;
+}
+
+th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
+    font-weight: 700;
+    border-bottom: 2px solid #5a67d8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9em;
+}
+
+tr:nth-child(even) {
+    background: #f8fafc;
+}
+
+tr:hover {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+/* 链接样式 */
+a {
+    color: #667eea;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+a:hover {
+    border-bottom-color: #667eea;
+    transform: translateY(-1px);
+}
+
+/* 分隔线样式 */
+hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #667eea, transparent);
+    margin: 3em 0;
+    border-radius: 1px;
+}
+
+/* 高亮样式 */
+.highlight {
+    background: linear-gradient(120deg, #fff9c4 0%, #fff59d 100%);
+    padding: 3px 8px;
+    border-radius: 6px;
+    color: #7c3aed;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(255, 245, 157, 0.4);
+}
+
+/* 章节分隔符 */
+.section-divider {
+    text-align: center;
+    margin: 3em 0;
+    position: relative;
+}
+
+.section-divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #667eea, transparent);
+}
+
+.section-divider span {
+    background: #ffffff;
+    padding: 0 24px;
+    color: #667eea;
+    font-size: 16px;
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    body { padding: 16px; }
+    .content { padding: 24px 20px; }
+    h1 { font-size: 1.8em; }
+    h2 { font-size: 1.4em; padding: 12px 16px; }
+    h3 { font-size: 1.2em; }
+    p { font-size: 16px; }
+}
 </style>"""
         
         return styles + html
