@@ -12,6 +12,10 @@ on:
         default: 'false'
         type: boolean
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   detect-and-publish:
     runs-on: self-hosted

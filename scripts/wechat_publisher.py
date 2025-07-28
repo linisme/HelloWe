@@ -46,7 +46,8 @@ class WeChatPublisher:
             response = requests.post(url, files=files)
             result = response.json()
             
-        if result.get('errcode') == 0:
+        # 成功时没有errcode字段，失败时有errcode字段
+        if 'errcode' not in result and 'url' in result:
             return result['url']
         else:
             raise Exception(f"图片上传失败: {result}")
@@ -65,7 +66,8 @@ class WeChatPublisher:
             result = response.json()
             print(f"🔍 上传响应: {result}")
             
-        if result.get('errcode') == 0:
+        # 成功时没有errcode字段，失败时有errcode字段
+        if 'errcode' not in result and 'media_id' in result:
             media_id = result['media_id']
             print(f"✅ 缩略图上传成功，media_id: {media_id}")
             return media_id
@@ -111,152 +113,26 @@ class WeChatPublisher:
         return self.add_wechat_styles(html)
     
     def add_wechat_styles(self, html):
-        """添加微信公众号样式"""
-        styles = """
-        <style>
-        /* 基础样式 */
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif; 
-            font-size: 16px; 
-            line-height: 1.6; 
-            color: #333; 
-            margin: 0; 
-            padding: 20px;
-        }
-        
-        /* 标题样式 */
-        h1 { 
-            font-size: 1.8em; 
-            font-weight: bold; 
-            color: #2c3e50; 
-            border-bottom: 3px solid #3498db; 
-            padding-bottom: 0.3em; 
-            margin: 1.5em 0 1em 0;
-        }
-        
-        h2 { 
-            font-size: 1.5em; 
-            font-weight: bold; 
-            color: #2c3e50; 
-            border-left: 4px solid #3498db; 
-            padding-left: 0.5em; 
-            margin: 1.3em 0 0.8em 0;
-        }
-        
-        h3 { 
-            font-size: 1.3em; 
-            font-weight: bold; 
-            color: #e74c3c; 
-            margin: 1.2em 0 0.6em 0;
-        }
-        
-        /* 段落样式 */
-        p { 
-            margin: 1em 0; 
-            text-align: justify; 
-            line-height: 1.8;
-        }
-        
-        /* 代码样式 */
-        code { 
-            background-color: #f8f9fa; 
-            padding: 2px 6px; 
-            border-radius: 4px; 
-            font-family: 'Fira Code', Consolas, Monaco, monospace; 
-            color: #e74c3c; 
-            font-size: 0.9em;
-        }
-        
-        pre { 
-            background-color: #f8f9fa; 
-            padding: 1.2em; 
-            border-radius: 8px; 
-            overflow-x: auto; 
-            border-left: 4px solid #3498db; 
-            margin: 1.5em 0;
-            line-height: 1.4;
-        }
-        
-        pre code { 
-            background-color: transparent; 
-            padding: 0; 
-            color: #333; 
-            font-size: 0.9em;
-        }
-        
-        /* 引用样式 */
-        blockquote { 
-            border-left: 4px solid #3498db; 
-            margin: 1.5em 0; 
-            padding: 0.5em 1.2em; 
-            background-color: #f8f9fa; 
-            font-style: italic; 
-            color: #666;
-        }
-        
-        /* 列表样式 */
-        ul, ol { 
-            margin: 1em 0; 
-            padding-left: 2em; 
-        }
-        
-        li { 
-            margin: 0.5em 0; 
-            line-height: 1.6;
-        }
-        
-        /* 表格样式 */
-        table { 
-            border-collapse: collapse; 
-            width: 100%; 
-            margin: 1.5em 0; 
-            font-size: 0.9em;
-        }
-        
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 10px 12px; 
-            text-align: left; 
-        }
-        
-        th { 
-            background-color: #3498db; 
-            color: white; 
-            font-weight: bold; 
-        }
-        
-        tr:nth-child(even) { 
-            background-color: #f2f2f2; 
-        }
-        
-        /* 图片样式 */
-        img { 
-            max-width: 100%; 
-            height: auto; 
-            border-radius: 8px; 
-            margin: 1em 0; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        /* 链接样式 */
-        a { 
-            color: #3498db; 
-            text-decoration: none; 
-        }
-        
-        a:hover { 
-            text-decoration: underline; 
-        }
-        
-        /* 分割线 */
-        hr { 
-            border: none; 
-            height: 1px; 
-            background-color: #ddd; 
-            margin: 2em 0; 
-        }
-        </style>
-        """
+        """添加微信公众号样式 - 简化版以符合20000字符限制"""
+        styles = """<style>
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",Arial;font-size:16px;line-height:1.6;color:#333;margin:0;padding:20px}
+h1{font-size:1.8em;font-weight:bold;color:#2c3e50;border-bottom:3px solid #3498db;padding-bottom:0.3em;margin:1.5em 0 1em 0}
+h2{font-size:1.5em;font-weight:bold;color:#2c3e50;border-left:4px solid #3498db;padding-left:0.5em;margin:1.3em 0 0.8em 0}
+h3{font-size:1.3em;font-weight:bold;color:#e74c3c;margin:1.2em 0 0.6em 0}
+p{margin:1em 0;text-align:justify;line-height:1.8}
+code{background-color:#f8f9fa;padding:2px 6px;border-radius:4px;color:#e74c3c;font-size:0.9em}
+pre{background-color:#f8f9fa;padding:1.2em;border-radius:8px;overflow-x:auto;border-left:4px solid #3498db;margin:1.5em 0}
+blockquote{border-left:4px solid #3498db;margin:1.5em 0;padding:0.5em 1.2em;background-color:#f8f9fa;font-style:italic;color:#666}
+ul,ol{margin:1em 0;padding-left:2em}
+li{margin:0.5em 0;line-height:1.6}
+table{border-collapse:collapse;width:100%;margin:1.5em 0;font-size:0.9em}
+th,td{border:1px solid #ddd;padding:10px 12px;text-align:left}
+th{background-color:#3498db;color:white;font-weight:bold}
+tr:nth-child(even){background-color:#f2f2f2}
+img{max-width:100%;height:auto;border-radius:8px;margin:1em 0}
+a{color:#3498db;text-decoration:none}
+hr{border:none;height:1px;background-color:#ddd;margin:2em 0}
+</style>"""
         
         return styles + html
     
@@ -264,6 +140,19 @@ class WeChatPublisher:
         """创建草稿"""
         print(f"🔍 创建草稿 - 标题: {title}")
         print(f"🔍 传入的thumb_media_id: '{thumb_media_id}', 类型: {type(thumb_media_id)}, 长度: {len(thumb_media_id) if thumb_media_id else 0}")
+        
+        # 调试各字段长度
+        print(f"🔍 各字段长度检查:")
+        print(f"   - title长度: {len(title)} 字符")
+        print(f"   - author长度: {len(author)} 字符")  
+        print(f"   - digest长度: {len(digest)} 字符")
+        print(f"   - content长度: {len(content)} 字符")
+        print(f"   - source_url长度: {len(source_url)} 字符")
+        
+        # 检查content长度是否超过微信API限制
+        if len(content) > 20000:
+            print(f"⚠️  content内容过长({len(content)}字符)，将被截断至20000字符")
+            content = content[:20000]
         
         access_token = self.get_access_token()
         url = f"https://api.weixin.qq.com/cgi-bin/draft/add?access_token={access_token}"
@@ -288,11 +177,17 @@ class WeChatPublisher:
         data = {"articles": [article_data]}
         print(f"🔍 发送到微信API的数据: {json.dumps(data, indent=2, ensure_ascii=False)}")
         
-        response = requests.post(url, json=data)
+        # 明确设置编码以避免中文乱码
+        headers = {
+            'Content-Type': 'application/json; charset=utf-8'
+        }
+        json_data = json.dumps(data, ensure_ascii=False).encode('utf-8')
+        response = requests.post(url, data=json_data, headers=headers)
         result = response.json()
         print(f"🔍 微信API响应: {result}")
         
-        if result.get('errcode') == 0:
+        # 成功时没有errcode字段，失败时有errcode字段
+        if 'errcode' not in result and 'media_id' in result:
             print(f"✅ 草稿创建成功，media_id: {result['media_id']}")
             return result['media_id']
         else:
@@ -305,10 +200,15 @@ class WeChatPublisher:
         url = f"https://api.weixin.qq.com/cgi-bin/freepublish/submit?access_token={access_token}"
         
         data = {"media_id": media_id}
-        response = requests.post(url, json=data)
+        headers = {
+            'Content-Type': 'application/json; charset=utf-8'
+        }
+        json_data = json.dumps(data, ensure_ascii=False).encode('utf-8')
+        response = requests.post(url, data=json_data, headers=headers)
         result = response.json()
         
-        if result.get('errcode') == 0:
+        # 成功时没有errcode字段，失败时有errcode字段
+        if 'errcode' not in result and 'publish_id' in result:
             return result.get('publish_id')
         else:
             raise Exception(f"发布失败: {result}")
@@ -325,9 +225,16 @@ class WeChatPublisher:
         # 处理内容
         html_content = self.process_markdown_content(markdown_content, article_dir)
         
-        # 生成摘要
-        content_text = re.sub(r'[#*`\[\]()]', '', markdown_content)
-        digest = content_text[:100].strip() + "..." if len(content_text) > 100 else content_text
+        # 生成摘要 - 微信公众号digest字段严格限制
+        content_text = re.sub(r'[#*`\[\]()-]', '', markdown_content)
+        content_text = re.sub(r'\n+', ' ', content_text)  # 将换行替换为空格
+        content_text = re.sub(r'\s+', ' ', content_text)  # 多个空格合并为一个
+        content_text = content_text.strip()
+        # 严格限制在24个字符以内，为微信API digest字段预留安全边距
+        if len(content_text) > 24:
+            digest = content_text[:24]
+        else:
+            digest = content_text
         
         # 查找缩略图
         thumb_media_id = ""
@@ -372,14 +279,24 @@ class WeChatPublisher:
             source_url=self.source_url
         )
         
-        # 发布草稿
-        publish_id = self.publish_draft(media_id)
-        
-        return {
-            'media_id': media_id,
-            'publish_id': publish_id,
-            'published_time': datetime.now().isoformat()
-        }
+        # 尝试发布草稿（可能因权限限制失败）
+        try:
+            publish_id = self.publish_draft(media_id)
+            print(f"✅ 草稿发布成功！publish_id: {publish_id}")
+            return {
+                'media_id': media_id,
+                'publish_id': publish_id,
+                'published_time': datetime.now().isoformat()
+            }
+        except Exception as e:
+            print(f"⚠️  自动发布失败: {e}")
+            print(f"✅ 草稿已创建成功 (media_id: {media_id})，请手动在微信公众平台后台发布")
+            return {
+                'media_id': media_id,
+                'publish_id': None,
+                'published_time': datetime.now().isoformat(),
+                'status': 'draft_created_manual_publish_required'
+            }
 
 def main():
     """主函数"""
